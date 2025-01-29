@@ -1,0 +1,9 @@
+services:
+  drupal:
+    image: "ghcr.io/uceap/devcontainer-drupal-example:v2.3.0"
+    volumes:
+      - ../..:/workspaces:cached
+  mariadb:
+    image: "ghcr.io/uceap/devcontainer-db-example:v1.0.0"
+  redis:
+    image: "redis:6"

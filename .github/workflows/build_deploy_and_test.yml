@@ -1,0 +1,139 @@
+name: Build, deploy and test
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+defaults:
+  run:
+    shell: bash
+env:
+  TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+  TERM: dumb
+  GITHUB_TOKEN: ${{ github.token }}
+  JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+  JIRA_PREFIX: ${{ vars.JIRA_PREFIX }}
+  TERMINUS_TOKEN: ${{ secrets.TERMINUS_TOKEN }}
+  CI_BRANCH: ${{ github.head_ref || github.ref_name }}
+  COMMIT_SHA: ${{ github.sha }}
+  CI_BUILD_NUMBER: ${{ github.run_number }}
+  DEFAULT_SITE: ${{ vars.TERMINUS_SITE }}
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  GITHUB_OWNER: ${{ github.repository_owner }}
+  CI_PROJECT_NAME: ${{ github.repository }}
+  PR_NUMBER: ${{ github.event.number }}
+  CI_PULL_REQUEST: ${{ github.event.pull_request._links.html.href }}
+  QA_BRANCH: 'qa'
+
+jobs:
+  configure_env_vars:
+    container:
+      image: quay.io/pantheon-public/build-tools-ci:8.x-php8.2
+      options: --user root
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Set bash_env env var
+        run: echo BASH_ENV=${RUNNER_TEMP}/bash_env.txt >> $GITHUB_ENV
+
+      # Set TERMINUS_ENV and related environment variables.
+      # https://github.com/pantheon-systems/docker-build-tools-ci/blob/6.x/scripts/set-environment
+      - name: setup-environment-vars
+        run: |
+          if [ "$CI_BRANCH" != "master" ]; then
+            # Test vars not set means trigger = push.
+            if [ -z "$PR_NUMBER" ]; then
+              # Var not set means trigger = push.
+              export PR_NUMBER=`curl -u "${GITHUB_OWNER}:${GITHUB_TOKEN}" \
+                -H "Accept: application/vnd.github.groot-preview+json" \
+                "https://api.github.com/repos/${CI_PROJECT_NAME}/commits/${COMMIT_SHA}/pulls" | \
+                jq '.[0].number | select(.!=null)'`
+            fi
+
+            if [ -z "$CI_PULL_REQUEST" ]; then
+              export CI_PULL_REQUEST=`curl -u "${GITHUB_OWNER}:${GITHUB_TOKEN}" \
+                -H "Accept: application/vnd.github.groot-preview+json" \
+                "https://api.github.com/repos/${CI_PROJECT_NAME}/commits/${COMMIT_SHA}/pulls" | \
+                jq '.[0].html_url | select(.!=null)'`
+            fi
+          fi
+
+          export CI_PROJECT_REPONAME=${GITHUB_REPOSITORY#*/}
+          export CI_PROJECT_USERNAME=${GITHUB_REPOSITORY_OWNER}
+          /build-tools-ci/scripts/set-environment
+          GITHUB_WORKFLOW_URL=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          echo "export CI_BUILD_URL='${GITHUB_WORKFLOW_URL}'" >> $BASH_ENV
+          echo "export CI_NODE_INDEX=0" >> $BASH_ENV
+          echo "export CI_REPOSITORY_URL='https://github.com/${GITHUB_REPOSITORY}'" >> $BASH_ENV
+          echo "export ARTIFACTS_DIR_URL='${GITHUB_WORKFLOW_URL}/#artifacts'" >> $BASH_ENV
+
+      - name: check-pantheon-site
+        if: ${{ github.actor != 'dependabot[bot]' }}
+        run: |
+          terminus -n auth:login --machine-token="$TERMINUS_TOKEN"
+          source $BASH_ENV # need to load $TERMINUS_ENV
+          set +e
+          terminus -n env:info --quiet; PANTHEON_SITE_EXISTS=$((!$?))
+          set -e
+          echo "export PANTHEON_SITE_EXISTS=${PANTHEON_SITE_EXISTS}" >> $BASH_ENV
+
+  build_and_deploy_to_pantheon:
+    container:
+      image: quay.io/pantheon-public/build-tools-ci:8.x-php8.2
+      options: --user root
+    runs-on: ubuntu-latest
+    needs: [configure_env_vars]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Set bash_env env var
+        run: echo BASH_ENV=${RUNNER_TEMP}/bash_env.txt >> $GITHUB_ENV
+
+      # Set TERMINUS_ENV and related environment variables.
+      # https://github.com/pantheon-systems/docker-build-tools-ci/blob/6.x/scripts/set-environment
+      - name: setup-environment-vars
+        run: /build-tools-ci/scripts/set-environment
+
+      - name: Build project for Pantheon
+        run: composer -n install --no-dev --optimize-autoloader
+
+      # Deploy to Pantheon
+      - name: deploy to Pantheon
+        if: ${{ github.actor != 'dependabot[bot]' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > ../private.key
+          chmod 600 ../private.key
+          eval `ssh-agent -s`
+          ssh-add ../private.key
+          source $BASH_ENV
+          # Fix any dubious ownership error.
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          ./.ci/deploy/pantheon/dev-multidev
+          if [ $PANTHEON_SITE_EXISTS -eq 0 ]; then
+            echo "Created Pantheon site, posting link to Jira."
+            CI_BRANCH_UPPERCASE=$(echo $CI_BRANCH | tr '[:lower:]' '[:upper:]')
+            if [[ $CI_BRANCH_UPPERCASE =~ (${JIRA_PREFIX}[0-9]+) ]]; then
+              JIRA_TICKET=${BASH_REMATCH[1]}
+              curl -L https://github.com/go-jira/jira/releases/download/v1.0.27/jira-linux-amd64 --output /usr/local/bin/jira
+              chmod +x /usr/local/bin/jira
+              jira comment $JIRA_TICKET \
+                -m "Successfully deployed to $MULTIDEV_SITE_URL"  \
+                --noedit \
+                -u devops@uceap.universityofcalifornia.edu \
+                -e https://uceapit.atlassian.net
+            else
+              echo "Could not determine Jira ticket ID from branch name $CI_BRANCH"
+            fi
+          else
+            echo "Pantheon site already exists, skipping Jira comment."
+          fi

@@ -1,0 +1,71 @@
+{
+  "name": "Drupal Example",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "drupal",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "hostRequirements": {
+    "memory": "7gb"
+  },
+  "forwardPorts": [
+    8080
+  ],
+  "portsAttributes": {
+    "mariadb:3306": {
+      "label": "mariadb",
+      "onAutoForward": "silent"
+    },
+    "8080": {
+      "label": "httpd",
+      "onAutoForward": "silent"
+    },
+    "9000": {
+      "label": "xdebug",
+      "onAutoForward": "silent"
+    }
+  },
+  "containerEnv": {
+    // Tell our scripts where to find the workspace
+    "WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
+    // Inherit (optional) Atuin key and password from local environment to setup sync.
+    "ATUIN_KEY": "${localEnv:ATUIN_KEY}",
+    "ATUIN_PASSWORD": "${localEnv:ATUIN_PASSWORD}",
+    // Codespaces sets GITHUB_TOKEN, and github-cli respects that but prioritizes GH_TOKEN.
+    // So we can have one config that works with GITHUB_TOKEN on Codespaces and GH_TOKEN locally.
+    "GH_TOKEN": "${localEnv:GH_TOKEN}",
+    // Inherit (optional) terminus token from local environment for auto-login.
+    "TERMINUS_TOKEN": "${localEnv:TERMINUS_TOKEN}",
+    // Inherit (optional) devops terminus token from local environment for auto-login. This is intended only as a fallback in case personal terminus token isn't set, and is used only during creation. This is intended only for Codespaces, but is supported in devcontainers for troubleshooting.
+    "DEVOPS_TERMINUS_TOKEN": "${localEnv:DEVOPS_TERMINUS_TOKEN}"
+  },
+  // Set defaults for mysql command line, db-rebuild.sh, and script/pantheon/deploy-to-*
+  "remoteEnv": {
+    "TERMINUS_SITE": "uceap-example",
+    "DRUSH_TASK": "deploy",
+    "MYSQL_HOST": "mariadb",
+    "MYSQL_TCP_PORT": "3306",
+    "MYSQL_USER": "drupal",
+    "MYSQL_PASSWORD": "password",
+    "MYSQL_DATABASE": "drupal",
+    "REDIS_HOST": "redis"
+  },
+  // GitHub Codespaces secrets
+  "secrets": {
+    "ATUIN_KEY": {
+      "description": "Set your Atuin key for sync (OPTIONAL)",
+      "documentationUrl": "https://docs.atuin.sh/guide/sync/"
+    },
+    "ATUIN_PASSWORD": {
+      "description": "Set your Atuin password for sync (OPTIONAL)",
+      "documentationUrl": "https://docs.atuin.sh/guide/sync/"
+    },
+    "TERMINUS_TOKEN": {
+      "description": "Set your Pantheon machine token to use terminus (OPTIONAL)",
+      "documentationUrl": "https://docs.pantheon.io/machine-tokens"
+    }
+  },
+  // Run lifecycle scripts from our custom image (they will invoke local scripts if we have them)
+  "onCreateCommand": "/usr/local/bin/uceap-drupal-dev-on-create",
+  "postCreateCommand": "/usr/local/bin/uceap-drupal-dev-post-create",
+  "updateContentCommand": "/usr/local/bin/uceap-drupal-dev-update-content",
+  "postStartCommand": "/usr/local/bin/uceap-drupal-dev-post-start"
+}

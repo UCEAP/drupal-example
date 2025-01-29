@@ -1,0 +1,38 @@
+name: Deploy to TEST
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Type of deployment'
+        required: true
+        default: 'normal'
+        type: choice
+        options:
+        - normal
+        - hotfix
+jobs:
+  deploy_to_test:
+    runs-on: ubuntu-latest
+    env:
+      TERMINUS_TOKEN: ${{ secrets.TERMINUS_TOKEN }}
+      TERMINUS_SITE: ${{ vars.TERMINUS_SITE }}
+      DRUSH_TASK: ${{ vars.DRUSH_TASK }}
+    steps:
+      - name: Install Terminus
+        run: |
+          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar --output /usr/local/bin/terminus
+          chmod +x /usr/local/bin/terminus
+      - name: Authenticate with Terminus
+        run: terminus -n auth:login --machine-token="$TERMINUS_TOKEN"
+      - name: Set SSH key
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Sync content and deploy to TEST
+        if: ${{ github.event.inputs.deployment_type == 'normal' }}
+        run: scripts/pantheon/deploy-to-test
+      - name: Deploy to TEST without sync
+        if: ${{ github.event.inputs.deployment_type == 'hotfix'}}
+        run: scripts/pantheon/deploy-to-test --no-sync
