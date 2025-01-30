@@ -44,7 +44,7 @@ jobs:
       # https://github.com/pantheon-systems/docker-build-tools-ci/blob/6.x/scripts/set-environment
       - name: setup-environment-vars
         run: |
-          if [ "$CI_BRANCH" != "master" ]; then
+          if [ "$CI_BRANCH" != "main" ]; then
             # Test vars not set means trigger = push.
             if [ -z "$PR_NUMBER" ]; then
               # Var not set means trigger = push.
