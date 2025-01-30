@@ -15,6 +15,7 @@ env:
   JIRA_PREFIX: ${{ vars.JIRA_PREFIX }}
   TERMINUS_TOKEN: ${{ secrets.TERMINUS_TOKEN }}
   CI_BRANCH: ${{ github.head_ref || github.ref_name }}
+  DEFAULT_BRANCH: main
   COMMIT_SHA: ${{ github.sha }}
   CI_BUILD_NUMBER: ${{ github.run_number }}
   DEFAULT_SITE: ${{ vars.TERMINUS_SITE }}
