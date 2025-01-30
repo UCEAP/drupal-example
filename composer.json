@@ -18,7 +18,9 @@
         "composer/installers": "^2.3",
         "drupal/core-composer-scaffold": "^11.1",
         "drupal/core-project-message": "^11.1",
-        "drupal/core-recommended": "^11.1"
+        "drupal/core-recommended": "^11.1",
+        "drupal/redis": "^1.9",
+        "drush/drush": "^13.3"
     },
     "conflict": {
         "drupal/drupal": "*"
@@ -41,7 +43,11 @@
         "echo 'Compiling theme...'"
       ],
       "dev-initialize-local": [
-        "echo 'Initializing local environment...'"
+        "build/templater.sh web/sites/template.settings.local.php > web/sites/default/settings.local.php",
+        "cp web/sites/template.services.local.yml web/sites/default/default.services.local.yml",
+        "echo >> web/sites/default/settings.local.php",
+        "echo \"\\$settings['hash_salt'] = '`dd if=/dev/random bs=1k count=1 2> /dev/null | shasum | cut -c1-40`';\" >> web/sites/default/settings.local.php",
+        "mkdir -p web/sites/default/files"
       ]
     },
     "extra": {
