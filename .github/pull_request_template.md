@@ -1,6 +1,6 @@
 ## Jira Issue
 
-UP-<num>
+UOS-<num>
 
 ## Tasks
 
