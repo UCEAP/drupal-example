@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5435bd0e420029047e56bdd8e97357cd",
+    "content-hash": "320b617fbc0e5afb6289a40fe31bd512",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2641,20 +2641,20 @@
         },
         {
             "name": "pantheon-systems/drupal-integrations",
-            "version": "9.0.5",
+            "version": "11.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/pantheon-systems/drupal-integrations.git",
-                "reference": "f0bd10f93b326d759dd3bbdcbff13f6cd13c0c8f"
+                "reference": "94ba178d7a66f677cf5178b33c5bb95d50064857"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pantheon-systems/drupal-integrations/zipball/f0bd10f93b326d759dd3bbdcbff13f6cd13c0c8f",
-                "reference": "f0bd10f93b326d759dd3bbdcbff13f6cd13c0c8f",
+                "url": "https://api.github.com/repos/pantheon-systems/drupal-integrations/zipball/94ba178d7a66f677cf5178b33c5bb95d50064857",
+                "reference": "94ba178d7a66f677cf5178b33c5bb95d50064857",
                 "shasum": ""
             },
             "conflict": {
-                "drupal/core": "<9"
+                "drupal/core": "<10"
             },
             "type": "project",
             "extra": {
@@ -2678,9 +2678,9 @@
             "description": "Add this project to any Drupal distribution based on drupal/core-composer-scaffold to enable it for use on Pantheon.",
             "support": {
                 "issues": "https://github.com/pantheon-systems/drupal-integrations/issues",
-                "source": "https://github.com/pantheon-systems/drupal-integrations/tree/9.0.5"
+                "source": "https://github.com/pantheon-systems/drupal-integrations/tree/11.0.0"
             },
-            "time": "2023-05-17T17:44:50+00:00"
+            "time": "2024-04-24T20:09:54+00:00"
         },
         {
             "name": "pear/archive_tar",
