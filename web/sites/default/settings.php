@@ -256,7 +256,7 @@ $databases = [];
  * directory in the public files path. The setting below allows you to set
  * its location.
  */
-# $settings['config_sync_directory'] = '/directory/outside/webroot';
+$settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config/sync';
 
 /**
  * Settings:
@@ -286,7 +286,7 @@ $databases = [];
  *   $settings['hash_salt'] = file_get_contents('/home/example/salt.txt');
  * @endcode
  */
-$settings['hash_salt'] = 'K6EQLi4yIpbvhqSxMeqneycBM-LKOk3YjSokxAzG5_MgaUqri_aj1nVStTvMlYG4JgWr2gbRlw';
+// we set this value in settings.local.php instead of here
 
 /**
  * Deployment identifier.
@@ -854,7 +854,16 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
 # $settings['migrate_file_public_path'] = '';
 # $settings['migrate_file_private_path'] = '';
 
-$settings['config_sync_directory'] = dirname(DRUPAL_ROOT) . '/config/sync';
+/**
+ * Include the Pantheon-specific settings file.
+ *
+ * n.b. The settings.pantheon.php file makes some changes
+ *      that affect all environments that this site
+ *      exists in.  Always include this file, even in
+ *      a local development environment, to ensure that
+ *      the site settings remain consistent.
+ */
+include __DIR__ . "/settings.pantheon.php";
 
 /**
  * Load local development override configuration, if available.
