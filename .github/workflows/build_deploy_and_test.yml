@@ -25,6 +25,7 @@ env:
   PR_NUMBER: ${{ github.event.number }}
   CI_PULL_REQUEST: ${{ github.event.pull_request._links.html.href }}
   QA_BRANCH: 'qa'
+  DRUSH_TASK: ${{ vars.DRUSH_TASK }}
 
 jobs:
   configure_env_vars:
