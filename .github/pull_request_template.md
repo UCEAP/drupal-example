@@ -1,6 +1,6 @@
-## Jira Issue
+## Description
 
-UOS-<num>
+…
 
 ## Tasks
 
