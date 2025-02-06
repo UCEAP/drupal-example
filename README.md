@@ -15,7 +15,7 @@ There are several options for getting started working on a UCEAP project. The fi
 3. [📦 **Local**](#option-3-local-): get this project running on your local workstation
 4. [💻 **Metal**](#option-4-metal-): the way we all used to do things back in the good ol' days
 
-Once you're up and running, check out the [`uceap/drupal-dev` README](https://github.com/UCEAP/devcontainer-drupal) for helpful tips about using these environments.
+Once you're up and running, check out the [`UCEAP/devcontainer-drupal` README](https://github.com/UCEAP/devcontainer-drupal) for helpful tips about using these environments.
 
 ## Option 1: Cloud ☁️ 
 The quickest way to start is to run the browser version of Visual Studio Code connected to a cloud container running the server on GitHub Codespaces.
