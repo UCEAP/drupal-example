@@ -10,12 +10,12 @@
 
 There are several options for getting started working on a UCEAP project. The first option is the simplest, then they increase in complexity and control:
 
-1. [☁️ **Cloud**](#option-1-cloud): quickly start editing code on a fresh copy of this project running live in the cloud
-2. [🖼️ **Hybrid**](#option-2-hybrid): connect your local editor to this project running live in the cloud
-3. [📦 **Local**](#option-3-local): get this project running on your local workstation
-4. [💻 **Metal**](#option-4-metal): the way we all used to do things back in the good ol' days
+1. [☁️ **Cloud**](#option-1-cloud-%EF%B8%8F): quickly start editing code on a fresh copy of this project running live in the cloud
+2. [🖼️ **Hybrid**](#option-2-hybrid-%EF%B8%8F): connect your local editor to this project running live in the cloud
+3. [📦 **Local**](#option-3-local-): get this project running on your local workstation
+4. [💻 **Metal**](#option-4-metal-): the way we all used to do things back in the good ol' days
 
-Once you're up and running, check out the [`uceap/drupal-dev` README](https://github.com/UCEAP/drupal-dev) for helpful tips about using these environments.
+Once you're up and running, check out the [`UCEAP/devcontainer-drupal` README](https://github.com/UCEAP/devcontainer-drupal) for helpful tips about using these environments.
 
 ## Option 1: Cloud ☁️ 
 The quickest way to start is to run the browser version of Visual Studio Code connected to a cloud container running the server on GitHub Codespaces.

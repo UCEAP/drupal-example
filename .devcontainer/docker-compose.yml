@@ -4,6 +4,6 @@ services:
     volumes:
       - ../..:/workspaces:cached
   mariadb:
-    image: "ghcr.io/uceap/devcontainer-db-example:v1.0.1"
+    image: "ghcr.io/uceap/devcontainer-db-example:main"
   redis:
     image: "redis:6"
