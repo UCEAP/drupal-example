@@ -39,6 +39,14 @@ jobs:
           push: true
           tags: ghcr.io/${{ env.REPO }}:${{ github.sha }}
           file: ./Dockerfile
+          build-args: |
+            MYSQL_HOST=${{ env.AZURE_MYSQL_HOST }}
+            MYSQL_TCP_PORT=${{ env.AZURE_MYSQL_TCP_PORT }}
+            MYSQL_USER=${{ env.AZURE_MYSQL_USER }}
+            MYSQL_PASSWORD=${{ secrets.AZURE_MYSQL_PASSWORD }}
+            MYSQL_DATABASE=${{ env.AZURE_MYSQL_DATABASE }}
+            REDIS_HOST=${{ env.AZURE_REDIS_HOST }}
+            HASH_SALT=${{ secrets.AZURE_HASH_SALT }}
 
   deploy:
     permissions:
