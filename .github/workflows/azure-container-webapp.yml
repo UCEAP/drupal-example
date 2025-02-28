@@ -6,7 +6,8 @@ name: Build and deploy to Azure
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
