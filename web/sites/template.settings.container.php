@@ -66,6 +66,7 @@ $settings['container_yamls'][]             = 'modules/contrib/redis/redis.servic
 $settings['container_yamls'][]             = 'modules/contrib/redis/example.services.yml';
 $settings['redis.connection']['interface'] = 'PhpRedis';
 $settings['redis.connection']['host']      = '{{REDIS_HOST}}';
+$settings['redis.connection']['password']  = '{{REDIS_AUTH}}';
 $settings['cache']['default']              = 'cache.backend.redis';
 
 /**

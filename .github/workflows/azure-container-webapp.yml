@@ -46,6 +46,7 @@ jobs:
             MYSQL_PASSWORD=${{ secrets.AZURE_MYSQL_PASSWORD }}
             MYSQL_DATABASE=${{ vars.AZURE_MYSQL_DATABASE }}
             REDIS_HOST=${{ vars.AZURE_REDIS_HOST }}
+            REDIS_AUTH=${{ secrets.AZURE_REDIS_AUTH }}
             HASH_SALT=${{ secrets.AZURE_HASH_SALT }}
 
   deploy:
