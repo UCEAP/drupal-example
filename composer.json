@@ -49,6 +49,10 @@
         "echo >> web/sites/default/settings.local.php",
         "echo \"\\$settings['hash_salt'] = '`dd if=/dev/random bs=1k count=1 2> /dev/null | shasum | cut -c1-40`';\" >> web/sites/default/settings.local.php",
         "mkdir -p web/sites/default/files"
+      ],
+      "initialize-container": [
+        "build/templater.sh web/sites/template.settings.container.php > web/sites/default/settings.container.php",
+        "mkdir -p web/sites/default/files"
       ]
     },
     "extra": {
