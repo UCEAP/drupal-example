@@ -60,7 +60,7 @@ variable "dbadmin_login" {
 
 variable "docker_image" {
   type        = string
-  default     = "uceap/drupal-example:576cd684c2228c9315db834940c6170f8ac10585"
+  default     = "uceap/drupal-example:latest"
   description = "The Docker image name for the Web App."
 }
 
