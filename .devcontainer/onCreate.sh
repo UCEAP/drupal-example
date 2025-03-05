@@ -19,3 +19,8 @@ rm files.tar.gz
 # no-same-permissions doesn't seem to work so we fix it here
 sudo find web/sites/default/files -type d -exec chmod g+ws {} +
 sudo find web/sites/default/files -type f -exec chmod g+w {} +
+
+# Set up infrastructure tooling
+# TODO move this into base image
+build/install-terraform.sh
+build/install-azure-cli.sh
