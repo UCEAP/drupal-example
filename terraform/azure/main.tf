@@ -33,12 +33,13 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_redis_cache" "rc" {
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  name                = random_pet.rediscache_name.id
-  sku_name            = var.rediscache_sku
-  family              = var.rediscache_family
-  capacity            = var.rediscache_capacity
+  location             = azurerm_resource_group.rg.location
+  resource_group_name  = azurerm_resource_group.rg.name
+  name                 = random_pet.rediscache_name.id
+  sku_name             = var.rediscache_sku
+  family               = var.rediscache_family
+  capacity             = var.rediscache_capacity
+  non_ssl_port_enabled = true
 }
 
 resource "azurerm_redis_firewall_rule" "az" {
