@@ -19,7 +19,8 @@ resource "random_pet" "webapp_name" {
 }
 
 resource "random_password" "dbadmin_password" {
-  length = 16
+  length  = 16
+  special = false
 }
 
 resource "random_bytes" "drupal_salt" {
