@@ -40,6 +40,14 @@ resource "azurerm_redis_cache" "rc" {
   capacity            = var.rediscache_capacity
 }
 
+resource "azurerm_redis_firewall_rule" "az" {
+  resource_group_name = azurerm_resource_group.rg.name
+  redis_cache_name    = azurerm_redis_cache.rc.name
+  name                = "azure"
+  start_ip            = "0.0.0.0"
+  end_ip              = "0.0.0.0"
+}
+
 resource "azurerm_mysql_flexible_server" "db" {
   location               = azurerm_resource_group.rg.location
   resource_group_name    = azurerm_resource_group.rg.name
@@ -48,6 +56,14 @@ resource "azurerm_mysql_flexible_server" "db" {
   zone                   = 3 # apparently terraform can't handle automatically-assigned zones
   administrator_login    = var.dbadmin_login
   administrator_password = random_password.dbadmin_password.result
+}
+
+resource "azurerm_mysql_flexible_server_firewall_rule" "az" {
+  resource_group_name = azurerm_resource_group.rg.name
+  server_name         = azurerm_mysql_flexible_server.db.name
+  name                = "azure"
+  start_ip_address    = "0.0.0.0"
+  end_ip_address      = "0.0.0.0"
 }
 
 resource "azurerm_service_plan" "sp" {
