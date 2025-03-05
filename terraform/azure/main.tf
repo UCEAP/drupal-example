@@ -45,9 +45,9 @@ resource "azurerm_redis_cache" "rc" {
 resource "azurerm_redis_firewall_rule" "az" {
   resource_group_name = azurerm_resource_group.rg.name
   redis_cache_name    = azurerm_redis_cache.rc.name
-  name                = "azure"
+  name                = "world"
   start_ip            = "0.0.0.0"
-  end_ip              = "0.0.0.0"
+  end_ip              = "255.255.255.255"
 }
 
 resource "azurerm_mysql_flexible_server" "db" {
