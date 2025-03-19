@@ -866,6 +866,14 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
 include __DIR__ . "/settings.pantheon.php";
 
 /**
+ * Load container deployment override configuration, if available.
+ */
+
+if (file_exists($app_root . '/' . $site_path . '/settings.container.php')) {
+  include $app_root . '/' . $site_path . '/settings.container.php';
+}
+
+/**
  * Load local development override configuration, if available.
  *
  * Create a settings.local.php file to override variables on secondary (staging,
