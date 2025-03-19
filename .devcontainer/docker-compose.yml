@@ -5,7 +5,7 @@ services:
       - ../..:/workspaces:cached
   mariadb:
     image: "ghcr.io/uceap/devcontainer-db-example:main"
-    restart: unless-stopped
+    restart: always
   redis:
     image: "redis:6"
-    restart: unless-stopped
+    restart: always
