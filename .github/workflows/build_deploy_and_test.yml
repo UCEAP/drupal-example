@@ -212,7 +212,7 @@ jobs:
         with:
           name: deployment-build
       - name: Fix file modes
-        run: find scripts vendor/bin -type f | xargs chmod +x
+        run: find vendor/bin -type f | xargs chmod +x
       - name: deploy to Pantheon
         env:
           DRUSH_TASK: ${{ vars.DRUSH_TASK }}
