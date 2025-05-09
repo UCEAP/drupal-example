@@ -59,13 +59,13 @@
       "documentationUrl": "https://docs.atuin.sh/guide/sync/"
     },
     "TERMINUS_TOKEN": {
-      "description": "Set your Pantheon machine token to use terminus (OPTIONAL)",
+      "description": "Set your Pantheon machine token to use terminus",
       "documentationUrl": "https://docs.pantheon.io/machine-tokens"
     }
   },
   // Run lifecycle scripts from our custom image (they will invoke local scripts if we have them)
-  "onCreateCommand": "/usr/local/bin/uceap-drupal-dev-on-create",
-  "postCreateCommand": "/usr/local/bin/uceap-drupal-dev-post-create",
-  "updateContentCommand": "/usr/local/bin/uceap-drupal-dev-update-content",
-  "postStartCommand": "/usr/local/bin/uceap-drupal-dev-post-start"
+  "onCreateCommand": "uceap devcontainer-on-create",
+  "postCreateCommand": "uceap devcontainer-post-create",
+  "updateContentCommand": "uceap devcontainer-update-content",
+  "postStartCommand": "uceap devcontainer-post-start"
 }

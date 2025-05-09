@@ -24,4 +24,4 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Deploy to LIVE
-        run: scripts/pantheon/deploy-to-live
+        run: uceap deploy-to-live

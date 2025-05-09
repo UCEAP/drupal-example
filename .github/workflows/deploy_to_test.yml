@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Sync content and deploy to TEST
         if: ${{ github.event.inputs.deployment_type == 'normal' }}
-        run: scripts/pantheon/deploy-to-test
+        run: uceap deploy-to-test
       - name: Deploy to TEST without sync
         if: ${{ github.event.inputs.deployment_type == 'hotfix'}}
-        run: scripts/pantheon/deploy-to-test --no-sync
+        run: uceap deploy-to-test --no-sync
