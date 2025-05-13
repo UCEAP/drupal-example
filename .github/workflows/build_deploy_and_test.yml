@@ -71,6 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/uceap/devcontainer-drupal:main
+    if: ${{ false }}
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v4
@@ -142,6 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/uceap/devcontainer-drupal:main
+    if: ${{ false }}
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v4
