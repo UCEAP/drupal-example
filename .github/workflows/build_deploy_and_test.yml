@@ -223,14 +223,8 @@ jobs:
           name: dev-build
       - name: Fix file modes
         run: chmod +x ./vendor/bin/*
-      - name: run acceptance tests with php-unit
-        run: composer -n unit-test-ci
-      - name: Upload artifacts
-        if: ${{ false }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-report
-          path: ./artifacts/coverage
+      - name: Run unit tests
+        run: composer -n unit-test
 
   prepare_pantheon:
     name: Prepare Pantheon

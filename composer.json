@@ -55,8 +55,7 @@
         "build/templater.sh web/sites/template.settings.container.php > web/sites/default/settings.container.php",
         "mkdir -p web/sites/default/files"
       ],
-      "unit-test": "./vendor/bin/phpunit --coverage-html $(pwd)/artifacts/coverage $(pwd)/web/modules/custom",
-      "unit-test-ci": "./vendor/bin/phpunit --coverage-clover=$(pwd)/coverage.xml $(pwd)/web/modules/custom"
+      "unit-test": "./vendor/bin/phpunit $(pwd)/web/modules/custom"
     },
     "extra": {
         "drupal-scaffold": {
