@@ -1,0 +1,5 @@
+name: 'UCEAP Example'
+type: module
+description: 'A custom module for demo purposes.'
+core_version_requirement: ^11
+package: UCEAP

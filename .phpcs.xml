@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ruleset>
+  <arg name="extensions" value="php,module,inc,install,test,profile,theme,css,info,txt,md,yml"/>
+  <file>web/modules/custom/uceap_example</file>
+  <!--Exclude third party code.-->
+  <exclude-pattern>./assets/vendor/*</exclude-pattern>
+  <!--Exclude folders used by common frontend tools. These folders match the file_scan_ignore_directories setting in default.settings.php-->
+  <exclude-pattern>*/node_modules/*</exclude-pattern>
+  <exclude-pattern>*/bower_components/*</exclude-pattern>
+  <rule ref="Drupal"/>
+  <rule ref="DrupalPractice"/>
+</ruleset>
