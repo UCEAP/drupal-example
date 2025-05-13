@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Example module for demo purposes.
+ */
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function uceap_example_preprocess_page(array &$variables) {
+  $message = [
+    '#markup' => '<div id="hello-world">Hello, world!</div>',
+    '#weight' => 10,
+  ];
+  $variables['page']['footer_bottom']['uceap_example_message'] = $message;
+}

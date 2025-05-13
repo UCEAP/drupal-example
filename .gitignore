@@ -40,6 +40,7 @@ web/web.config
 /.drush-lock-update
 /.gitattributes
 /.editorconfig
+.phpunit.result.cache
 
 # Add directories containing build assets below.
 # Keep all additions above the "cut" line.
