@@ -1,6 +1,6 @@
 services:
   drupal:
-    image: "ghcr.io/uceap/devcontainer-drupal-example:v2.3.0"
+    image: "ghcr.io/uceap/devcontainer-drupal:main"
     volumes:
       - ../..:/workspaces:cached
   mariadb:

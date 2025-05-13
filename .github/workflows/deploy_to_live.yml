@@ -1,27 +1,20 @@
 name: Deploy to LIVE
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 14 23 1 *'
+on: workflow_dispatch
 jobs:
   deploy_to_live:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/uceap/devcontainer-drupal:main
     env:
       TERMINUS_TOKEN: ${{ secrets.TERMINUS_TOKEN }}
       TERMINUS_SITE: ${{ vars.TERMINUS_SITE }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       DRUSH_TASK: ${{ vars.DRUSH_TASK }}
     steps:
-      - name: Install Terminus
-        run: |
-          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar --output /usr/local/bin/terminus
-          chmod +x /usr/local/bin/terminus
-      - name: Authenticate with Terminus
-        run: terminus -n auth:login --machine-token="$TERMINUS_TOKEN"
-      - name: Set SSH key
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Deploy to LIVE
-        run: scripts/pantheon/deploy-to-live
+        run: |
+          echo "$SSH_PRIVATE_KEY" > ../private.key
+          chmod 600 ../private.key
+          eval `ssh-agent -s`
+          ssh-add ../private.key
+          uceap deploy-to-live
