@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Example module for demo purposes.
+ */
+
+/**
  * Implements hook_preprocess_page().
  */
 function uceap_example_preprocess_page(array &$variables) {
