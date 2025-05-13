@@ -13,26 +13,27 @@ on:
 jobs:
   deploy_to_test:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/uceap/devcontainer-drupal:main
     env:
       TERMINUS_TOKEN: ${{ secrets.TERMINUS_TOKEN }}
       TERMINUS_SITE: ${{ vars.TERMINUS_SITE }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       DRUSH_TASK: ${{ vars.DRUSH_TASK }}
     steps:
-      - name: Install Terminus
-        run: |
-          curl -L https://github.com/pantheon-systems/terminus/releases/latest/download/terminus.phar --output /usr/local/bin/terminus
-          chmod +x /usr/local/bin/terminus
-      - name: Authenticate with Terminus
-        run: terminus -n auth:login --machine-token="$TERMINUS_TOKEN"
-      - name: Set SSH key
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Sync content and deploy to TEST
         if: ${{ github.event.inputs.deployment_type == 'normal' }}
-        run: uceap deploy-to-test
+        run: |
+          echo "$SSH_PRIVATE_KEY" > ../private.key
+          chmod 600 ../private.key
+          eval `ssh-agent -s`
+          ssh-add ../private.key
+          uceap deploy-to-test
       - name: Deploy to TEST without sync
         if: ${{ github.event.inputs.deployment_type == 'hotfix'}}
-        run: uceap deploy-to-test --no-sync
+        run: |
+          echo "$SSH_PRIVATE_KEY" > ../private.key
+          chmod 600 ../private.key
+          eval `ssh-agent -s`
+          ssh-add ../private.key
+          uceap deploy-to-test --no-sync

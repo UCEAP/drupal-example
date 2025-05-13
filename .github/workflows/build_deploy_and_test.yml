@@ -173,15 +173,11 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if [ -z "$PR_NUMBER" ]; then
-            if [ "$BASE_BRANCH" == "master" ]; then
-              export TERMINUS_ENV=dev
-            else
-              if [ "$CI_BRANCH" == "qa" ]; then
-                export TERMINUS_ENV=qa
-              else
-                exit 1 # we should never get here
-              fi
-            fi
+            case "$CI_BRANCH" in
+              master) export TERMINUS_ENV=dev ;;
+              qa) export TERMINUS_ENV=qa ;;
+              *) exit 1 ;; # we should never get here
+            esac
           else
             export TERMINUS_ENV=pr-$PR_NUMBER
           fi
@@ -225,7 +221,6 @@ jobs:
           chmod 600 ../private.key
           eval `ssh-agent -s`
           ssh-add ../private.key
-          terminus -n auth:login --machine-token="$TERMINUS_TOKEN"
           if [ $TERMINUS_ENV == "dev" ]; then
             uceap deploy-to-dev
           else
