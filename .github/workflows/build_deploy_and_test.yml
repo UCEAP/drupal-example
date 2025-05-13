@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/uceap/devcontainer-drupal:main
-    if: github.head_ref != 'qa' && github.head_ref != 'master'
+    if: github.head_ref != 'qa' && github.head_ref != 'main'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/uceap/devcontainer-drupal:main
-    if: github.head_ref != 'qa' && github.head_ref != 'master'
+    if: github.head_ref != 'qa' && github.head_ref != 'main'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -233,7 +233,7 @@ jobs:
       image: ghcr.io/uceap/devcontainer-drupal:main
     outputs:
       terminus_env: ${{ steps.determine_pantheon_env.outputs.terminus_env }}
-    if: github.head_ref != 'qa' && github.head_ref != 'master' && github.actor != 'dependabot[bot]'
+    if: github.head_ref != 'qa' && github.head_ref != 'main' && github.actor != 'dependabot[bot]'
     steps:
       - name: Determine Pantheon environment
         id: determine_pantheon_env
@@ -242,7 +242,7 @@ jobs:
         run: |
           if [ -z "$PR_NUMBER" ]; then
             case "$CI_BRANCH" in
-              master) export TERMINUS_ENV=dev ;;
+              main) export TERMINUS_ENV=dev ;;
               qa) export TERMINUS_ENV=qa ;;
               *) exit 1 ;; # we should never get here
             esac
@@ -327,7 +327,7 @@ jobs:
     name: Feature tests
     needs: [deploy_to_pantheon]
     runs-on: ubuntu-latest
-    if: ${{ github.actor != 'dependabot[bot]' && github.ref_name != 'master' }}
+    if: ${{ github.actor != 'dependabot[bot]' && github.ref_name != 'main' }}
     steps:
       - name: Run Cypress
         run: echo "This is where the Cypress tests would run."
