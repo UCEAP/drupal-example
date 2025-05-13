@@ -153,8 +153,8 @@ jobs:
       # TODO think about using tar for our artifacts: https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
       - name: Fix file modes
         run: chmod +x ./vendor/bin/*
-      - name: PHP lint project custom modules and theme
-        run: composer -n lint-parallel
+      - name: PHP lint project custom modules
+        run: composer -n lint
 
   coding_standards:
     name: Coding standards

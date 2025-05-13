@@ -55,6 +55,13 @@
         "build/templater.sh web/sites/template.settings.container.php > web/sites/default/settings.container.php",
         "mkdir -p web/sites/default/files"
       ],
+      "lint": "find web/modules/custom -name '*.php' | xargs php -l",
+      "code-sniff": "./vendor/bin/phpcs -n",
+      "code-sniff-feature" : "./vendor/bin/phpcs --standard=Drupal,DrupalPractice --warning-severity=0 $(git diff --name-only --diff-filter=d origin/qa... -- '*.php' '*.module' '*.inc' '*.install' '*.test' '*.profile' '*.theme' '*.info')",
+      "code-fix-feature" : "./vendor/bin/phpcbf --standard=Drupal,DrupalPractice --warning-severity=0 $(git diff --name-only --diff-filter=d origin/qa... -- '*.php' '*.module' '*.inc' '*.install' '*.test' '*.profile' '*.theme' '*.info')",
+      "code-sniff-qa" : "./vendor/bin/phpcs --standard=Drupal,DrupalPractice --warning-severity=0 $(git diff --name-only --diff-filter=d origin/master... -- '*.php' '*.module' '*.inc' '*.install' '*.test' '*.profile' '*.theme' '*.info')",
+      "static-analysis-feature" : "phpstan analyse $(git diff --name-only --diff-filter=d origin/qa... -- '*.php' '*.module' '*.inc' '*.install' '*.test' '*.profile' '*.theme' '*.info')",
+      "static-analysis" : "phpstan analyse",
       "unit-test": "./vendor/bin/phpunit $(pwd)/web/modules/custom"
     },
     "extra": {
