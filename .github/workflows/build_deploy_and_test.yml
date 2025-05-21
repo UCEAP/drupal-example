@@ -57,6 +57,7 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
           git ls-files -X ../deploy.gitignore -oi | xargs rm -rf
           find . -name .git -exec rm -rf {} +
+          cp ../deploy.gitignore .gitignore
       - name: Upload deployment build artifact
         uses: actions/upload-artifact@v4
         with:
