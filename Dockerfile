@@ -1,6 +1,15 @@
 # check=skip=SecretsUsedInArgOrEnv
 
 FROM ghcr.io/uceap/devcontainer-drupal:v2.3.0
+
+# Install SSH server
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get install -y openssh-server \
+    && apt-get clean -y && rm -rf /var/lib/apt/lists/* \
+    && echo "Port 2222" >> /etc/ssh/sshd_config.d/azure.conf
+COPY docker-uceap-entrypoint /usr/local/bin/docker-uceap-entrypoint
+ENTRYPOINT ["docker-uceap-entrypoint"]
+
 ARG MYSQL_HOST
 ARG MYSQL_TCP_PORT
 ARG MYSQL_USER
