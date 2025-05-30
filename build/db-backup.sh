@@ -8,7 +8,6 @@ DATABASE=${DB_NAME:-${MYSQL_DATABASE:-database}}
 PORT=${DB_PORT:-3306}
 MOUNT=${LANDO_MOUNT:-default_value}
 WEBROOT=${LANDO_WEBROOT:-default_value}
-DRUSHTASK=${DRUSH_TASK:-myeap-deploy}
 TERMINUSENV=${TERMINUS_ENV:-dev}
 BACKUPPATH=${BACKUP_PATH:-~/Sites}
 # PARSE THE ARGZZ
@@ -60,15 +59,6 @@ while (( "$#" )); do
         shift 2
       fi
       ;;
-      -D|--drush-task|--drush-task=*)
-        if [ "${1##--drush-task=}" != "$1" ]; then
-          DRUSHTASK="${1##--drush-task=}"
-          shift
-        else
-          DRUSHTASK=$2
-          shift 2
-        fi
-        ;;
     --)
       shift
       break

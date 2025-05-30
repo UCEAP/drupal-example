@@ -40,7 +40,6 @@
   // Set defaults for mysql command line, db-rebuild.sh, and script/pantheon/deploy-to-*
   "remoteEnv": {
     "TERMINUS_SITE": "uceap-example",
-    "DRUSH_TASK": "deploy",
     "MYSQL_HOST": "mariadb",
     "MYSQL_TCP_PORT": "3306",
     "MYSQL_USER": "drupal",

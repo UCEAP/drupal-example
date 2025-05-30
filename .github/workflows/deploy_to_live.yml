@@ -9,7 +9,6 @@ jobs:
       TERMINUS_TOKEN: ${{ secrets.TERMINUS_TOKEN }}
       TERMINUS_SITE: ${{ vars.TERMINUS_SITE }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      DRUSH_TASK: ${{ vars.DRUSH_TASK }}
     steps:
       - name: Deploy to LIVE
         run: |

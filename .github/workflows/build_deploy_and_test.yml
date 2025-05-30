@@ -280,7 +280,6 @@ jobs:
         run: find vendor/bin -type f | xargs chmod +x
       - name: deploy to Pantheon
         env:
-          DRUSH_TASK: ${{ vars.DRUSH_TASK }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           TERMINUS_SITE: ${{ vars.TERMINUS_SITE }}
           TERMINUS_ENV: ${{needs.prepare_pantheon.outputs.terminus_env}}

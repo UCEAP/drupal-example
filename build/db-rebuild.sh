@@ -7,7 +7,6 @@ PASSWORD=${DB_PASSWORD:-${MYSQL_PASSWORD:-}}
 DATABASE=${DB_NAME:-${MYSQL_DATABASE:-database}}
 PORT=${DB_PORT:-${MYSQL_TCP_PORT:-3306}}
 WEBROOT=${LANDO_WEBROOT:-$(dirname $(dirname $(realpath $0)))}
-DRUSHTASK=${DRUSH_TASK:-myeap-deploy}
 TERMINUSENV=${TERMINUS_ENV:-dev}
 
 # PARSE THE ARGZZ
@@ -59,15 +58,6 @@ while (( "$#" )); do
         shift 2
       fi
       ;;
-      -D|--drush-task|--drush-task=*)
-        if [ "${1##--drush-task=}" != "$1" ]; then
-          DRUSHTASK="${1##--drush-task=}"
-          shift
-        else
-          DRUSHTASK=$2
-          shift 2
-        fi
-        ;;
     --)
       shift
       break
@@ -156,5 +146,5 @@ eval "$CMD"
 echo "Import completed with status code $?"
 
 # update db with latest code/config changes
-echo "Running drush:$DRUSHTASK to update DB with latest configs and baseline migrations."
-eval "cd $WEBROOT && drush $DRUSHTASK"
+echo "Running drush deploy to update DB with latest configs."
+eval "cd $WEBROOT && drush deploy"
