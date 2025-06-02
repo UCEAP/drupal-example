@@ -13,10 +13,16 @@ jobs:
     container:
       image: ghcr.io/uceap/devcontainer-drupal:main
     steps:
+      - name: Load secrets
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TERMINUS_TOKEN: op://secrets-example/pantheon-terminus/credential
       - name: Prune stale multidev environments
         env:
           TERMINUS_SITE: ${{ vars.TERMINUS_SITE }}
-          TERMINUS_TOKEN: ${{ secrets.TERMINUS_TOKEN }}
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: uceap cleanup-multidevs

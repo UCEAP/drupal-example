@@ -252,10 +252,16 @@ jobs:
           fi
           echo TERMINUS_ENV=$TERMINUS_ENV >> $GITHUB_ENV
           echo terminus_env=$TERMINUS_ENV >> $GITHUB_OUTPUT
+      - name: Load secrets
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TERMINUS_TOKEN: op://secrets-example/pantheon-terminus/credential
       - name: Create Pantheon environment
         env:
           TERMINUS_SITE: ${{ vars.TERMINUS_SITE }}
-          TERMINUS_TOKEN: ${{ secrets.TERMINUS_TOKEN }}
         run: |
           terminus -n auth:login --machine-token="$TERMINUS_TOKEN"
           set +e
@@ -277,13 +283,19 @@ jobs:
         with:
           name: deployment-build
       - name: Fix file modes
-        run: find vendor/bin -type f | xargs chmod +x
+        run: find scripts vendor/bin -type f | xargs chmod +x
+      - name: Load secrets
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TERMINUS_TOKEN: op://secrets-example/pantheon-terminus/credential
+          SSH_PRIVATE_KEY: op://secrets-example/pantheon-ssh/private key
       - name: deploy to Pantheon
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           TERMINUS_SITE: ${{ vars.TERMINUS_SITE }}
-          TERMINUS_ENV: ${{needs.prepare_pantheon.outputs.terminus_env}}
-          TERMINUS_TOKEN: ${{ secrets.TERMINUS_TOKEN }}
+          TERMINUS_ENV: ${{ needs.prepare_pantheon.outputs.terminus_env }}
         run: |
           echo "$SSH_PRIVATE_KEY" > ../private.key
           chmod 600 ../private.key
