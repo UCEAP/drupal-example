@@ -283,7 +283,7 @@ jobs:
         with:
           name: deployment-build
       - name: Fix file modes
-        run: find scripts vendor/bin -type f | xargs chmod +x
+        run: find vendor/bin -type f | xargs chmod +x
       - name: Load secrets
         uses: 1password/load-secrets-action@v2
         with:
