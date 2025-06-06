@@ -45,14 +45,14 @@
         "echo 'Compiling theme...'"
       ],
       "dev-initialize-local": [
-        "build/templater.sh web/sites/template.settings.local.php > web/sites/default/settings.local.php",
+        "templater.sh web/sites/template.settings.local.php > web/sites/default/settings.local.php",
         "cp web/sites/template.services.local.yml web/sites/default/default.services.local.yml",
         "echo >> web/sites/default/settings.local.php",
         "echo \"\\$settings['hash_salt'] = '`dd if=/dev/random bs=1k count=1 2> /dev/null | shasum | cut -c1-40`';\" >> web/sites/default/settings.local.php",
         "mkdir -p web/sites/default/files"
       ],
       "initialize-container": [
-        "build/templater.sh web/sites/template.settings.container.php > web/sites/default/settings.container.php",
+        "templater.sh web/sites/template.settings.container.php > web/sites/default/settings.container.php",
         "mkdir -p web/sites/default/files"
       ],
       "lint": "find web/modules/custom -name '*.php' | xargs php -l",
