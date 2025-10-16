@@ -21,7 +21,7 @@ provider "aws" {
   region = var.aws_region
 
   assume_role {
-    role_arn = "arn:aws:iam::321037115887:role/DevopsEngineer"
+    role_arn = "arn:aws:iam::${var.aws_account_id}:role/DevopsEngineer"
   }
 }
 

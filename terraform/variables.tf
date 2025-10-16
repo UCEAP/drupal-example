@@ -1,3 +1,8 @@
+variable "aws_account_id" {
+  description = "AWS account ID"
+  type        = string
+}
+
 variable "aws_region" {
   description = "AWS region to deploy resources (e.g. us-west-2)"
   type        = string
@@ -18,7 +23,7 @@ variable "availability_zones" {
 
 # Network Configuration
 variable "app_number" {
-  description = "App CIDR octet (10.${app_number}.0.0/16). Range: 101-254"
+  description = "App CIDR octet (10.{app_number}.0.0/16). Range: 101-254"
   type        = number
   default     = 101
   validation {
