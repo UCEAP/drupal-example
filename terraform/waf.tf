@@ -127,7 +127,7 @@ resource "aws_wafv2_web_acl_association" "alb" {
 
 # Configure WAF Logging to CloudWatch
 # Logs all traffic evaluated by the WAF (including blocked and allowed requests)
-resource "aws_wafv2_logging_configuration" "alb" {
+resource "aws_wafv2_web_acl_logging_configuration" "alb" {
   resource_arn            = aws_wafv2_web_acl.alb.arn
   log_destination_configs = [aws_cloudwatch_log_group.waf.arn]
 

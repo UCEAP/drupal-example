@@ -137,9 +137,3 @@ variable "github_repo" {
   type        = string
   default     = "drupal-example"
 }
-
-variable "github_token" {
-  description = "GitHub personal access token for pulling Docker images"
-  type        = string
-  sensitive   = true
-}

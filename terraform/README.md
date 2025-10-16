@@ -40,28 +40,14 @@ export AWS_ACCESS_KEY_ID="your-access-key"
 export AWS_SECRET_ACCESS_KEY="your-secret-key"
 ```
 
-### 2. Set GitHub Token
-
-You need a GitHub Personal Access Token with `repo` and `workflow` scopes:
-
-```bash
-export TF_VAR_github_token="your-github-token"
-```
-
-Or create a `terraform.tfvars` file:
-
-```hcl
-github_token = "your-github-token"
-```
-
-### 3. Initialize Terraform
+### 2. Initialize Terraform
 
 ```bash
 cd terraform
 terraform init
 ```
 
-### 4. Review and Customize Variables
+### 3. Review and Customize Variables
 
 Edit `variables.tf` or create `terraform.tfvars` to customize:
 

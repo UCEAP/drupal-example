@@ -16,10 +16,7 @@ resource "aws_elasticache_cluster" "redis" {
   security_group_ids   = [aws_security_group.redis.id]
   port                 = var.redis_port
 
-  # Enable auth token for security
-  auth_token                 = random_password.redis_auth_token.result
   transit_encryption_enabled = true
-  at_rest_encryption_enabled = true
 
   # Maintenance and backup
   maintenance_window       = "sun:05:00-sun:06:00"
@@ -36,7 +33,7 @@ resource "aws_elasticache_cluster" "redis" {
 
 # ElastiCache Parameter Group
 resource "aws_elasticache_parameter_group" "redis" {
-  name_prefix = "${var.name_prefix}-redis-"
+  name        = "${var.name_prefix}-redis"
   family      = "redis7"
   description = "Custom parameter group for ${var.name_prefix} Redis"
 
