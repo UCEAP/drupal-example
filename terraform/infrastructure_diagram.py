@@ -3,6 +3,12 @@
 Infrastructure diagram for Drupal on AWS using diagrams.mingrammer.com
 This visualizes the complete architecture defined in the Terraform files.
 
+To generate the diagram, run:
+  python3 -m venv my_diagrams_env
+  source my_diagrams_env/bin/activate
+  pip install diagrams
+  python3 infrastructure_diagram.py
+
 ACCURACY NOTES:
 - Only HTTP (80) is enabled; HTTPS (443) listener is commented out
 - Auto-scaling targets: CPU 70% (out: 60s, in: 300s), Memory 80% (out: 60s, in: 300s)
