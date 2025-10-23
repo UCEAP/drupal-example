@@ -21,25 +21,19 @@ The infrastructure consists of:
 
 ## Prerequisites
 
-1. **AWS CLI** configured with credentials
-2. **Terraform** >= 1.0
-3. **GitHub Token** with repo and workflow permissions
+1. **Terraform** >= 1.0
+2. **Terraform Cloud Account** with organization "UCEAP"
+3. **Terraform Cloud API Token** (for authentication)
+4. **GitHub Token** with repo and workflow permissions
 
 ## Setup
 
-### 1. Configure AWS Credentials
+### 1. Authenticate with Terraform Cloud
 
-Ensure your AWS CLI is configured with appropriate credentials:
-
-```bash
-aws configure
-```
-
-Or use environment variables:
+This project uses Terraform Cloud for state management and runs. Authenticate using:
 
 ```bash
-export AWS_ACCESS_KEY_ID="your-access-key"
-export AWS_SECRET_ACCESS_KEY="your-secret-key"
+terraform login
 ```
 
 ### 2. Initialize Terraform
@@ -134,17 +128,9 @@ Use these in your GitHub Actions workflows to deploy updates.
 To deploy a new version of your Docker image:
 
 1. Build and push new image to GHCR
-2. Update the ECS service to force a new deployment:
+2. The GitHub Actions workflow uses exported variables to update the ECS service automatically
 
-```bash
-aws ecs update-service \
-  --cluster $(terraform output -raw ecs_cluster_name) \
-  --service $(terraform output -raw ecs_service_name) \
-  --force-new-deployment \
-  --region us-west-2
-```
-
-Or use the GitHub Actions workflow with the exported variables.
+**Note:** AWS CLI is not required locally when using Terraform Cloud. AWS credentials are managed securely in your Terraform Cloud workspace.
 
 ## Monitoring
 
