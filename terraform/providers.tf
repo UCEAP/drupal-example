@@ -1,5 +1,11 @@
 terraform {
-  required_version = ">= 1.0"
+  cloud {
+    organization = "UCEAP"
+
+    workspaces {
+      name = "drupal-example-demo"
+    }
+  }
 
   required_providers {
     aws = {
@@ -19,10 +25,6 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
-
-  assume_role {
-    role_arn = "arn:aws:iam::${var.aws_account_id}:role/DevopsEngineer"
-  }
 }
 
 provider "github" {
