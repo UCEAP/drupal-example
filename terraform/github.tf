@@ -95,5 +95,5 @@ resource "github_actions_variable" "ecr_repository_name" {
 resource "github_actions_variable" "aws_account_id" {
   repository    = var.github_repo
   variable_name = "AWS_ACCOUNT_ID"
-  value         = data.aws_caller_identity.current.account_id
+  value         = var.aws_account_id
 }

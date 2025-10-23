@@ -28,6 +28,3 @@
 #
 # After applying, access your application at the ALB DNS name:
 #   terraform output alb_url
-
-# Data source for current AWS account ID
-data "aws_caller_identity" "current" {}
