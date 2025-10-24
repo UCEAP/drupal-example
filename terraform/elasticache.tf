@@ -4,19 +4,27 @@ resource "random_password" "redis_auth_token" {
   special = false
 }
 
-# ElastiCache Redis Cluster
-resource "aws_elasticache_cluster" "redis" {
-  cluster_id           = "${var.name_prefix}-redis"
-  engine               = "redis"
-  engine_version       = var.redis_engine_version
-  node_type            = var.redis_node_type
-  num_cache_nodes      = 1
-  parameter_group_name = aws_elasticache_parameter_group.redis.name
-  subnet_group_name    = aws_elasticache_subnet_group.main.name
-  security_group_ids   = [aws_security_group.redis.id]
-  port                 = var.redis_port
+# ElastiCache Redis Replication Group (Multi-AZ with automatic failover)
+resource "aws_elasticache_replication_group" "redis" {
+  replication_group_id       = "${var.name_prefix}-redis"
+  description                = "Redis cluster for ${var.name_prefix} with Multi-AZ failover"
+  engine                     = "redis"
+  engine_version             = var.redis_engine_version
+  node_type                  = var.redis_node_type
+  port                       = var.redis_port
+  parameter_group_name       = aws_elasticache_parameter_group.redis.name
+  subnet_group_name          = aws_elasticache_subnet_group.main.name
+  security_group_ids         = [aws_security_group.redis.id]
 
+  # Multi-AZ configuration
+  automatic_failover_enabled = true
+  multi_az_enabled           = true
+  num_cache_clusters         = 2  # 1 primary + 1 replica across AZs
+
+  # Security
   transit_encryption_enabled = true
+  auth_token                 = random_password.redis_auth_token.result
+  at_rest_encryption_enabled = true
 
   # Maintenance and backup
   maintenance_window       = "sun:05:00-sun:06:00"

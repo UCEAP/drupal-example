@@ -112,7 +112,7 @@ resource "aws_ecs_task_definition" "app" {
         },
         {
           name  = "REDIS_HOST"
-          value = aws_elasticache_cluster.redis.cache_nodes[0].address
+          value = aws_elasticache_replication_group.redis.primary_endpoint_address
         },
         {
           name  = "REDIS_PORT"
@@ -190,6 +190,7 @@ resource "aws_ecs_service" "app" {
   # Wait for ALB and secrets to be ready
   depends_on = [
     aws_lb_listener.http,
+    aws_lb_listener.https,
     aws_iam_role_policy_attachment.ecs_task_execution,
     aws_iam_role_policy_attachment.ecs_task_execution_ssm,
     aws_iam_role_policy.ecs_task_execution_secrets,

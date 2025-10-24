@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+# Initialize Drupal container with runtime environment variables
+# This runs at container startup with secrets from AWS Secrets Manager
+cd /var/www && composer initialize-container
+
 service ssh start
 
 exec apache2-foreground

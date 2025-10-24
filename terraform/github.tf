@@ -1,4 +1,13 @@
-# GitHub Actions Secrets
+# NOTE: AWS IAM credentials for GitHub Actions must be manually configured
+# in GitHub repository settings. See DEPLOYMENT.md for setup instructions.
+#
+# Required GitHub Actions secrets to set manually:
+# - AWS_ACCESS_KEY_ID: IAM user access key ID with ECR and ECS permissions
+# - AWS_SECRET_ACCESS_KEY: IAM user secret access key
+#
+# These credentials are no longer managed by Terraform due to security best practices
+# and to avoid dependency on Terraform Cloud workspace sharing.
+
 # GitHub Actions Secrets - Secrets Manager ARNs (not plaintext values)
 resource "github_actions_secret" "db_password_secret_arn" {
   repository      = var.github_repo
@@ -46,7 +55,7 @@ resource "github_actions_variable" "db_name" {
 resource "github_actions_variable" "redis_host" {
   repository    = var.github_repo
   variable_name = "AWS_REDIS_HOST"
-  value         = aws_elasticache_cluster.redis.cache_nodes[0].address
+  value         = aws_elasticache_replication_group.redis.primary_endpoint_address
 }
 
 resource "github_actions_variable" "redis_port" {

@@ -80,7 +80,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
       - name: Log in to Amazon ECR
@@ -95,15 +95,6 @@ jobs:
             ${{ vars.ECR_REPOSITORY_URL }}:${{ github.sha }}
             ${{ vars.ECR_REPOSITORY_URL }}:latest
           file: ./Dockerfile
-          build-args: |
-            MYSQL_HOST=${{ vars.AWS_MYSQL_HOST }}
-            MYSQL_TCP_PORT=${{ vars.AWS_MYSQL_TCP_PORT }}
-            MYSQL_USER=${{ vars.AWS_MYSQL_USER }}
-            MYSQL_PASSWORD=${{ secrets.AWS_MYSQL_PASSWORD }}
-            MYSQL_DATABASE=${{ vars.AWS_MYSQL_DATABASE }}
-            REDIS_HOST=${{ vars.AWS_REDIS_HOST }}
-            REDIS_AUTH=${{ secrets.AWS_REDIS_AUTH }}
-            HASH_SALT=${{ secrets.AWS_HASH_SALT }}
 
   lint:
     name: Check lint
@@ -283,7 +274,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
       - name: Update ECS service with new image

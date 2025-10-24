@@ -11,8 +11,13 @@ output "alb_dns_name" {
 }
 
 output "alb_url" {
-  description = "URL of the application"
-  value       = "http://${aws_lb.main.dns_name}"
+  description = "URL of the application (via ALB DNS)"
+  value       = "https://${aws_lb.main.dns_name}"
+}
+
+output "app_url" {
+  description = "URL of the application (via custom domain)"
+  value       = "https://${aws_route53_record.app.name}"
 }
 
 # Database Outputs
@@ -33,13 +38,13 @@ output "db_name" {
 
 # Redis Outputs
 output "redis_endpoint" {
-  description = "ElastiCache Redis endpoint"
-  value       = aws_elasticache_cluster.redis.cache_nodes[0].address
+  description = "ElastiCache Redis primary endpoint"
+  value       = aws_elasticache_replication_group.redis.primary_endpoint_address
 }
 
 output "redis_port" {
   description = "ElastiCache Redis port"
-  value       = aws_elasticache_cluster.redis.cache_nodes[0].port
+  value       = var.redis_port
 }
 
 # ECS Outputs
