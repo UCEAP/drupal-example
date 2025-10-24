@@ -1,4 +1,4 @@
-FROM ghcr.io/uceap/devcontainer-drupal:v2.3.0
+FROM ghcr.io/uceap/devcontainer-drupal:main
 
 # Install SSH server
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
@@ -10,7 +10,6 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 COPY docker-uceap-entrypoint /usr/local/bin/docker-uceap-entrypoint
 ENTRYPOINT ["docker-uceap-entrypoint"]
 
-COPY build /var/www/build
 COPY config /var/www/config
 COPY composer.json /var/www/
 COPY web /var/www/web
