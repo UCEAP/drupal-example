@@ -6,10 +6,16 @@ jobs:
     container:
       image: ghcr.io/uceap/devcontainer-drupal:main
     env:
-      TERMINUS_TOKEN: ${{ secrets.TERMINUS_TOKEN }}
       TERMINUS_SITE: ${{ vars.TERMINUS_SITE }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
     steps:
+      - name: Load secrets
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TERMINUS_TOKEN: op://secrets-example/pantheon-terminus/credential
+          SSH_PRIVATE_KEY: op://secrets-example/pantheon-ssh/private key
       - name: Deploy to LIVE
         run: |
           echo "$SSH_PRIVATE_KEY" > ../private.key
