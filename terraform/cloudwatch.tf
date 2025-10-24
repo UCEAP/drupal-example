@@ -10,8 +10,9 @@ resource "aws_cloudwatch_log_group" "ecs" {
 
 # CloudWatch Log Group for WAF Logs
 # Logs all WAF activity including blocked requests
+# Note: WAF log group names must start with "aws-waf-logs-"
 resource "aws_cloudwatch_log_group" "waf" {
-  name              = "/aws/waf/${var.name_prefix}"
+  name              = "aws-waf-logs-${var.name_prefix}"
   retention_in_days = 30 # Extended retention for security compliance
 
   tags = {
