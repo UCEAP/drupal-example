@@ -1,154 +1,270 @@
 #!/usr/bin/env python3
 """
-Infrastructure diagram for Drupal on AWS using diagrams.mingrammer.com
-This visualizes the complete architecture defined in the Terraform files.
-
-To generate the diagram, run:
-  python3 -m venv my_diagrams_env
-  source my_diagrams_env/bin/activate
-  pip install diagrams
-  python3 infrastructure_diagram.py
-
-ACCURACY NOTES:
-- Only HTTP (80) is enabled; HTTPS (443) listener is commented out
-- Auto-scaling targets: CPU 70% (out: 60s, in: 300s), Memory 80% (out: 60s, in: 300s)
-- ALB health check: Path /, interval 30s, healthy 2, unhealthy 3, timeout 5s, codes 200-399
-- ECS task health check: curl -f http://localhost/, 30s interval, 5s timeout, 3 retries, 60s start period
-- RDS: Auto-scales 20GB → 100GB, Multi-AZ, 7-day backups, exports error/general/slowquery logs
-- Redis: Transit encryption enabled, 5-day snapshot retention
+AWS Drupal Infrastructure Diagram Generator
+Generates a Graphviz diagram from Terraform configuration
 """
 
-from diagrams import Diagram, Cluster, Edge
-from diagrams.aws.network import ELB, IGW, NATGateway, RouteTable
-from diagrams.aws.compute import ECS, ECR
-from diagrams.aws.database import RDS, ElastiCache
-from diagrams.aws.security import SecretsManager, IAM, SecurityHub, WAF
-from diagrams.aws.storage import S3
-from diagrams.aws.management import Cloudwatch, CloudwatchAlarm
-from diagrams.onprem.client import Client
+from graphviz import Digraph
 
-# Create the main diagram with strict ranking
-with Diagram("Drupal on AWS Infrastructure", show=False, filename="drupal_architecture", direction="TB"):
+def create_aws_infrastructure_diagram():
+    """Create a comprehensive diagram of the AWS Drupal infrastructure"""
 
-    # Internet and users (TOP)
-    users = Client("Users")
+    # Create the main graph with custom styling
+    dot = Digraph(
+        'AWS_Drupal_Infrastructure',
+        comment='Drupal on AWS - ECS Fargate Architecture',
+        format='png'
+    )
 
-    with Cluster("AWS VPC (10.101.0.0/16)"):
-        # Layer 1: Internet Gateway
-        igw = IGW("Internet Gateway")
+    # Global graph attributes
+    dot.attr(
+        rankdir='TB',
+        splines='polyline',
+        nodesep='0.6',
+        ranksep='1.0',
+        fontname='Arial',
+        fontsize='14',
+        bgcolor='white',
+        compound='true',
+        newrank='true'
+    )
 
-        # Layer 2: Availability Zones (side by side)
-        with Cluster("Availability Zone 1"):
-            nat_az1 = NATGateway("NAT Gateway AZ1\n(EIP)")
-            priv_rt_az1 = RouteTable("Private RT\n(0.0.0.0/0 → NAT)")
-            ecs_az1 = ECS("Drupal ECS Task\nCPU: 1vCPU, Mem: 2GB\nHealth: curl /")
-            rds_az1 = RDS("RDS Primary\nMySQL 8.0\ndb.t4g.micro")
-            redis_az1 = ElastiCache("Redis Primary\n7.0\ncache.t4g.micro")
+    # Node styling defaults
+    dot.attr('node',
+             shape='box',
+             style='rounded,filled',
+             fontname='Arial',
+             fontsize='11',
+             margin='0.3,0.2'
+    )
 
-        with Cluster("Availability Zone 2"):
-            nat_az2 = NATGateway("NAT Gateway AZ2\n(EIP)")
-            priv_rt_az2 = RouteTable("Private RT\n(0.0.0.0/0 → NAT)")
-            ecs_az2 = ECS("Drupal ECS Task\nCPU: 1vCPU, Mem: 2GB\nHealth: curl /")
-            rds_az2 = RDS("RDS Standby\nMySQL 8.0\n(Multi-AZ)\n20GB → 100GB\nBackup: 7d")
-            redis_az2 = ElastiCache("Redis Replica\nTransit encrypt: ON\nSnapshot: 5d")
+    # === INTERNET & ENTRY POINT ===
+    dot.node('internet', 'Internet\n🌐',
+             shape='ellipse',
+             fillcolor='#E3F2FD',
+             color='#1976D2',
+             fontsize='13',
+             penwidth='2')
 
-        # Layer 3: Regional resources (ALB, WAF)
-        with Cluster("Regional Resources"):
-            alb = ELB("ALB\n(HTTP 80 only)\nTarget: ECS")
-            waf = WAF("WAFv2\n(Attached to ALB)\nRules: Core, Known Bad,\nSQLi, Rate Limit 2k/5m")
-            alb_sg = SecurityHub("ALB SG\nIngress: 80\nEgress: All")
-            pub_rt = RouteTable("Public Route Table\n(0.0.0.0/0 → IGW)")
+    # === REGIONAL SERVICES (Above VPC) ===
+    with dot.subgraph(name='cluster_regional') as regional:
+        regional.attr(label='AWS Region US-West-2',
+                     fontsize='13',
+                     style='dashed',
+                     color='#616161',
+                     penwidth='2')
 
-        # Layer 4: Support Services (BOTTOM)
-        with Cluster("Support Services"):
-            ecs_sg = SecurityHub("ECS SG\nIngress: 80\n(from ALB SG)\nEgress: All")
-            rds_sg = SecurityHub("RDS SG\nIngress: 3306\n(from ECS SG)\nEgress: Denied")
-            redis_sg = SecurityHub("Redis SG\nIngress: 6379\n(from ECS SG)\nEgress: Denied")
-            secrets = SecretsManager("Secrets Manager\n(7d recovery)\n- DB Password\n- Redis Auth\n- Drupal Salt")
-            logs = Cloudwatch("CloudWatch Logs\n/ecs (7d), /aws/waf (30d),\n/aws/alb (14d)")
-            iam_role = IAM("IAM Roles\n(Exec & Task)\nSSM Session Mgr")
-            alarms = CloudwatchAlarm("6 CloudWatch Alarms\n- Task count\n- ECS CPU > 90%\n- RDS CPU > 80%\n- ALB unhealthy\n- WAF blocked > 100")
-            ecr = ECR("ECR Repo\n(drupal:latest)\nScan on push")
+        # WAF (first line of defense)
+        regional.node('waf', 'AWS WAF\n(OWASP Top 10 + Rate Limiting)',
+                     fillcolor='#EF9A9A',
+                     color='#C62828',
+                     shape='hexagon',
+                     penwidth='2')
 
-        s3_logs = S3("S3 Bucket\n(ALB logs)")
-        autoscaling = ECS("Auto Scaling\nCPU: 70% target\nMem: 80% target\nOut: 60s, In: 300s")
+        # === VPC ===
+        with regional.subgraph(name='cluster_vpc') as vpc:
+            vpc.attr(label='VPC (10.X.0.0/16)',
+                    fontsize='14',
+                    style='solid',
+                    color='#1976D2',
+                    penwidth='3',
+                    bgcolor='#F5F5F5')
 
-    # Internet traffic flow (TOP to BOTTOM)
-    users >> Edge(label="HTTP") >> igw
-    igw >> Edge(label="0.0.0.0/0") >> pub_rt
-    pub_rt >> alb_sg >> alb
-    alb >> Edge(label="WAFv2 Web ACL") >> waf
+            # Internet Gateway (at VPC boundary)
+            vpc.node('igw', 'Internet Gateway',
+                    fillcolor='#64B5F6',
+                    color='#1565C0',
+                    penwidth='2')
 
-    # ALB health check and traffic to ECS (both AZs)
-    alb >> Edge(label="Health: GET / every 30s\n(200-399, 2 healthy, 3 unhealthy)") >> ecs_sg
-    alb >> Edge(label="Forward to port 80") >> ecs_sg
-    ecs_sg >> ecs_az1
-    ecs_sg >> ecs_az2
+            # === AVAILABILITY ZONE 1 ===
+            with vpc.subgraph(name='cluster_az1') as az1:
+                az1.attr(label='Availability Zone 1 (us-west-2a)',
+                        fontsize='12',
+                        style='solid',
+                        color='#FF6F00',
+                        penwidth='2')
 
-    # Outbound internet access via NAT (AZ1)
-    ecs_az1 >> Edge(label="Outbound\n(pkg updates)") >> priv_rt_az1
-    priv_rt_az1 >> Edge(label="0.0.0.0/0") >> nat_az1
-    nat_az1 >> Edge(label="SNAT") >> igw
+                # Public Subnet with NAT Gateway at top
+                with az1.subgraph(name='cluster_public_az1') as pub_az1:
+                    pub_az1.attr(label='Public Subnet (10.X.0.0/24)',
+                                fontsize='10',
+                                style='filled',
+                                fillcolor='#E8F4F8',
+                                color='#1E88E5')
+                    pub_az1.node('nat_az1', 'NAT Gateway\n(Elastic IP)',
+                                fillcolor='#90CAF9',
+                                color='#1565C0')
+                    pub_az1.node('alb_az1', 'Application Load Balancer\n(Spans AZs)',
+                                fillcolor='#64B5F6',
+                                color='#1565C0',
+                                shape='box3d',
+                                penwidth='2')
 
-    # Outbound internet access via NAT (AZ2)
-    ecs_az2 >> Edge(label="Outbound\n(pkg updates)") >> priv_rt_az2
-    priv_rt_az2 >> Edge(label="0.0.0.0/0") >> nat_az2
-    nat_az2 >> Edge(label="SNAT") >> igw
+                # Private Subnet AZ1
+                with az1.subgraph(name='cluster_private_az1') as priv_az1:
+                    priv_az1.attr(label='Private Subnet (10.X.10.0/24)',
+                                 fontsize='10',
+                                 style='filled',
+                                 fillcolor='#F3E5F5',
+                                 color='#8E24AA')
+                    priv_az1.node('ecs_task_az1', 'ECS Tasks\n(Drupal Containers)',
+                                 fillcolor='#CE93D8',
+                                 color='#6A1B9A',
+                                 shape='component',
+                                 penwidth='2')
 
-    # ECR image pulls
-    ecs_az1 >> Edge(label="Pull image\n(IAM auth)") >> ecr
-    ecs_az2 >> Edge(label="Pull image\n(IAM auth)") >> ecr
+                # Database Subnet AZ1
+                with az1.subgraph(name='cluster_db_az1') as db_az1:
+                    db_az1.attr(label='Database Subnet (10.X.20.0/24)',
+                               fontsize='10',
+                               style='filled',
+                               fillcolor='#FFF3E0',
+                               color='#F57C00')
+                    db_az1.node('rds_az1', 'RDS MySQL\n(Primary)',
+                               fillcolor='#FFB74D',
+                               color='#E65100',
+                               shape='cylinder',
+                               penwidth='2')
+                    db_az1.node('redis_az1', 'ElastiCache\nRedis Node',
+                               fillcolor='#FFB74D',
+                               color='#E65100',
+                               shape='cylinder',
+                               penwidth='2')
 
-    # Database connections (AZ1)
-    ecs_az1 >> Edge(label="TCP 3306") >> rds_sg
-    rds_sg >> rds_az1
-    ecs_az1 >> Edge(label="TCP 6379\n(TLS)") >> redis_sg
-    redis_sg >> redis_az1
+            # === AVAILABILITY ZONE 2 ===
+            with vpc.subgraph(name='cluster_az2') as az2:
+                az2.attr(label='Availability Zone 2 (us-west-2b)',
+                        fontsize='12',
+                        style='solid',
+                        color='#FF6F00',
+                        penwidth='2')
 
-    # Database connections (AZ2)
-    ecs_az2 >> Edge(label="TCP 3306") >> rds_sg
-    rds_sg >> rds_az2
-    ecs_az2 >> Edge(label="TCP 6379\n(TLS)") >> redis_sg
-    redis_sg >> redis_az2
+                # Public Subnet with NAT Gateway at top
+                with az2.subgraph(name='cluster_public_az2') as pub_az2:
+                    pub_az2.attr(label='Public Subnet (10.X.1.0/24)',
+                                fontsize='10',
+                                style='filled',
+                                fillcolor='#E8F4F8',
+                                color='#1E88E5')
+                    pub_az2.node('nat_az2', 'NAT Gateway\n(Elastic IP)',
+                                fillcolor='#90CAF9',
+                                color='#1565C0')
+                    pub_az2.node('alb_az2', 'Application Load Balancer\n(Spans AZs)',
+                                fillcolor='#64B5F6',
+                                color='#1565C0',
+                                shape='box3d',
+                                style='rounded,filled,dashed',)
 
-    # RDS Multi-AZ replication
-    rds_az1 >> Edge(label="Synchronous\nreplication") >> rds_az2
+                # Private Subnet AZ2
+                with az2.subgraph(name='cluster_private_az2') as priv_az2:
+                    priv_az2.attr(label='Private Subnet (10.X.11.0/24)',
+                                 fontsize='10',
+                                 style='filled',
+                                 fillcolor='#F3E5F5',
+                                 color='#8E24AA')
+                    priv_az2.node('ecs_task_az2', 'ECS Tasks\n(Drupal Containers)',
+                                 fillcolor='#CE93D8',
+                                 color='#6A1B9A',
+                                 shape='component',
+                                 penwidth='2')
 
-    # Redis replication
-    redis_az1 >> Edge(label="Asynchronous\nreplication") >> redis_az2
-
-    # Secrets retrieval
-    ecs_az1 >> Edge(label="Retrieve at launch") >> secrets
-    ecs_az2 >> Edge(label="Retrieve at launch") >> secrets
-
-    # Logging
-    ecs_az1 >> Edge(label="Container logs\n(awslogs driver)") >> logs
-    ecs_az2 >> Edge(label="Container logs\n(awslogs driver)") >> logs
-    alb >> Edge(label="Access logs") >> s3_logs
-    waf >> Edge(label="WAF logs\n(keep allowed, drop blocked)") >> logs
-
-    # Monitoring
-    ecs_az1 >> Edge(label="Metrics") >> alarms
-    ecs_az2 >> Edge(label="Metrics") >> alarms
-    alb >> Edge(label="Metrics") >> alarms
-    rds_az1 >> Edge(label="Metrics") >> alarms
-    rds_az2 >> Edge(label="Metrics") >> alarms
-    redis_az1 >> Edge(label="Metrics") >> alarms
-    redis_az2 >> Edge(label="Metrics") >> alarms
-
-    # Auto scaling
-    alarms >> Edge(label="Triggers (CPU/Memory)") >> autoscaling
-    autoscaling >> ecs_az1
-    autoscaling >> ecs_az2
-
-    # IAM usage
-    ecs_az1 >> Edge(label="Task role") >> iam_role
-    ecs_az2 >> Edge(label="Task role") >> iam_role
-    ecr >> iam_role
+                # Database Subnet AZ2
+                with az2.subgraph(name='cluster_db_az2') as db_az2:
+                    db_az2.attr(label='Database Subnet (10.X.21.0/24)',
+                               fontsize='10',
+                               style='filled',
+                               fillcolor='#FFF3E0',
+                               color='#F57C00')
+                    db_az2.node('rds_az2', 'RDS MySQL\n(Standby)',
+                               fillcolor='#FFB74D',
+                               color='#E65100',
+                               shape='cylinder',
+                               style='rounded,filled,dashed')
+                    db_az2.node('redis_az2', 'ElastiCache\n(Spans AZs)',
+                               fillcolor='#FFB74D',
+                               color='#E65100',
+                               shape='cylinder',
+                               style='rounded,filled,dashed')
 
 
-if __name__ == "__main__":
-    print("Infrastructure diagram generated successfully!")
-    print("Output files:")
-    print("  - drupal_architecture.png (diagram image)")
-    print("  - drupal_architecture (Graphviz dot file)")
+    # === FORCE VERTICAL ORDERING ===
+    # Main vertical flow: Internet -> WAF -> IGW -> ALB
+    with dot.subgraph() as s:
+        s.attr(rank='same')
+        s.node('internet')
+
+    with dot.subgraph() as s:
+        s.attr(rank='same')
+        s.node('waf')
+
+    with dot.subgraph() as s:
+        s.node('igw')
+
+    with dot.subgraph() as s:
+        s.attr(rank='same')
+        s.node('alb_az1')
+        s.node('alb_az2')
+
+    with dot.subgraph() as s:
+        s.attr(rank='same')
+        s.node('nat_az1')
+        s.node('nat_az2')
+
+    with dot.subgraph() as s:
+        s.attr(rank='same')
+        s.node('ecs_task_az1')
+        s.node('ecs_task_az2')
+
+    with dot.subgraph() as s:
+        s.attr(rank='same')
+        s.node('redis_az1')
+        s.node('redis_az2')
+
+    with dot.subgraph() as s:
+        s.attr(rank='same')
+        s.node('rds_az1')
+        s.node('rds_az2')
+
+    # # Add invisible edges within each AZ to force vertical ordering
+    dot.edge('alb_az1', 'nat_az1', style='invis')
+    dot.edge('alb_az2', 'nat_az2', style='invis')
+    dot.edge('redis_az1', 'rds_az1', style='invis')
+    dot.edge('redis_az2', 'rds_az2', style='invis')
+
+    # === PRIMARY TRAFFIC FLOW (Main Request Path) ===
+    # Internet -> WAF -> IGW -> ALB
+    dot.edge('internet', 'waf', color='#1976D2', style='bold', penwidth='3')
+    dot.edge('waf', 'igw', color='#1976D2', penwidth='3')
+    dot.edge('igw', 'alb_az1', color='#1E88E5', penwidth='2.5')
+    dot.edge('igw', 'alb_az2', color='#1E88E5', penwidth='2.5')
+    # ALB -> ECS Tasks (Load balanced)
+    dot.edge('alb_az1', 'ecs_task_az1', color='#8E24AA', penwidth='2.5')
+    dot.edge('alb_az2', 'ecs_task_az2', color='#8E24AA', penwidth='2.5')
+
+    # ECS Tasks -> Backend Services
+    dot.edge('ecs_task_az1', 'rds_az1', color='#F57C00', penwidth='2')
+    dot.edge('ecs_task_az1', 'redis_az1', color='#F57C00', penwidth='2')
+    dot.edge('ecs_task_az2', 'rds_az1', color='#F57C00', penwidth='2')
+    dot.edge('ecs_task_az2', 'redis_az2', color='#F57C00', penwidth='2')
+
+    # === OUTBOUND TRAFFIC (From ECS to Internet) ===
+    dot.edge('ecs_task_az1', 'nat_az1', label='outbound', color='#7B1FA2', style='dotted', penwidth='1.5', fontsize='9')
+    dot.edge('ecs_task_az2', 'nat_az2', label='outbound', color='#7B1FA2', style='dotted', penwidth='1.5', fontsize='9')
+    dot.edge('nat_az1', 'igw', color='#1E88E5', style='dotted', penwidth='1.5')
+    dot.edge('nat_az2', 'igw', color='#1E88E5', style='dotted', penwidth='1.5')
+
+    # === HIGH AVAILABILITY ===
+    # RDS Multi-AZ Replication
+    dot.edge('redis_az1', 'redis_az2', label='same node', color='#EF6C00', style='dashed', dir='both', penwidth='2', fontsize='9')
+    dot.edge('rds_az1', 'rds_az2', label='synchronous replication', color='#EF6C00', style='dashed', dir='both', penwidth='2', fontsize='9')
+
+    return dot
+
+if __name__ == '__main__':
+    # Generate the diagram
+    diagram = create_aws_infrastructure_diagram()
+
+    # Render to file
+    output_path = diagram.render('aws_drupal_infrastructure', cleanup=True)
+    print(f"✓ Diagram generated: {output_path}")
+    print("✓ Infrastructure visualization complete!")

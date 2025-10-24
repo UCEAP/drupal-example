@@ -17,7 +17,7 @@ The infrastructure consists of:
 - **GitHub Actions Integration**: Automatically sets secrets and variables
 - **SSM Session Manager**: Secure access to running ECS tasks for debugging
 
-![AWS Infrastructure Diagram](drupal_architecture.png)
+![AWS Infrastructure Diagram](aws_drupal_infrastructure.png)
 
 ## Prerequisites
 
