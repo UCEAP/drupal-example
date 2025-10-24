@@ -27,95 +27,123 @@ from diagrams.aws.storage import S3
 from diagrams.aws.management import Cloudwatch, CloudwatchAlarm
 from diagrams.onprem.client import Client
 
-# Create the main diagram
+# Create the main diagram with strict ranking
 with Diagram("Drupal on AWS Infrastructure", show=False, filename="drupal_architecture", direction="TB"):
 
-    # Internet and users
+    # Internet and users (TOP)
     users = Client("Users")
-    internet = IGW("Internet")
 
     with Cluster("AWS VPC (10.101.0.0/16)"):
+        # Layer 1: Internet Gateway
         igw = IGW("Internet Gateway")
 
-        with Cluster("Public Subnets (AZ1: 10.101.0.0/24, AZ2: 10.101.1.0/24)"):
-            pub_rt = RouteTable("Public Route Table\n(0.0.0.0/0 → IGW)")
+        # Layer 2: Availability Zones (side by side)
+        with Cluster("Availability Zone 1"):
             nat_az1 = NATGateway("NAT Gateway AZ1\n(EIP)")
+            priv_rt_az1 = RouteTable("Private RT\n(0.0.0.0/0 → NAT)")
+            ecs_az1 = ECS("Drupal ECS Task\nCPU: 1vCPU, Mem: 2GB\nHealth: curl /")
+            rds_az1 = RDS("RDS Primary\nMySQL 8.0\ndb.t4g.micro")
+            redis_az1 = ElastiCache("Redis Primary\n7.0\ncache.t4g.micro")
+
+        with Cluster("Availability Zone 2"):
             nat_az2 = NATGateway("NAT Gateway AZ2\n(EIP)")
+            priv_rt_az2 = RouteTable("Private RT\n(0.0.0.0/0 → NAT)")
+            ecs_az2 = ECS("Drupal ECS Task\nCPU: 1vCPU, Mem: 2GB\nHealth: curl /")
+            rds_az2 = RDS("RDS Standby\nMySQL 8.0\n(Multi-AZ)\n20GB → 100GB\nBackup: 7d")
+            redis_az2 = ElastiCache("Redis Replica\nTransit encrypt: ON\nSnapshot: 5d")
+
+        # Layer 3: Regional resources (ALB, WAF)
+        with Cluster("Regional Resources"):
             alb = ELB("ALB\n(HTTP 80 only)\nTarget: ECS")
-            alb_sg = SecurityHub("ALB SG\nIngress: 80\nEgress: All")
             waf = WAF("WAFv2\n(Attached to ALB)\nRules: Core, Known Bad,\nSQLi, Rate Limit 2k/5m")
+            alb_sg = SecurityHub("ALB SG\nIngress: 80\nEgress: All")
+            pub_rt = RouteTable("Public Route Table\n(0.0.0.0/0 → IGW)")
 
-        with Cluster("Private Subnets (AZ1: 10.101.10.0/24, AZ2: 10.101.11.0/24)"):
-            priv_rt_az1 = RouteTable("Private RT AZ1\n(0.0.0.0/0 → NAT-AZ1)")
-            priv_rt_az2 = RouteTable("Private RT AZ2\n(0.0.0.0/0 → NAT-AZ2)")
-            with Cluster("ECS Fargate Cluster\n(Container Insights enabled)"):
-                ecs_service = ECS("Drupal ECS\n(1-3 Fargate tasks)\nCPU: 1vCPU, Mem: 2GB\nHealth: curl /")
-                ecr = ECR("ECR Repo\n(drupal:latest)\nScan on push")
-            ecs_sg = SecurityHub("ECS SG\nIngress: 80\n(from ALB SG)\nEgress: All")
-
-        with Cluster("Database Subnets (AZ1: 10.101.20.0/24, AZ2: 10.101.21.0/24)"):
-            db_rt = RouteTable("Database RT\n(Isolated)")
-            rds = RDS("RDS MySQL 8.0\n(Multi-AZ)\ndb.t4g.micro\n20GB → 100GB\nBackup: 7d")
-            rds_sg = SecurityHub("RDS SG\nIngress: 3306\n(from ECS SG)\nEgress: Denied")
-            redis = ElastiCache("Redis 7.0\ncache.t4g.micro\nTransit encrypt: ON\nSnapshot: 5d")
-            redis_sg = SecurityHub("Redis SG\nIngress: 6379\n(from ECS SG)\nEgress: Denied")
-
+        # Layer 4: Support Services (BOTTOM)
         with Cluster("Support Services"):
+            ecs_sg = SecurityHub("ECS SG\nIngress: 80\n(from ALB SG)\nEgress: All")
+            rds_sg = SecurityHub("RDS SG\nIngress: 3306\n(from ECS SG)\nEgress: Denied")
+            redis_sg = SecurityHub("Redis SG\nIngress: 6379\n(from ECS SG)\nEgress: Denied")
             secrets = SecretsManager("Secrets Manager\n(7d recovery)\n- DB Password\n- Redis Auth\n- Drupal Salt")
             logs = Cloudwatch("CloudWatch Logs\n/ecs (7d), /aws/waf (30d),\n/aws/alb (14d)")
             iam_role = IAM("IAM Roles\n(Exec & Task)\nSSM Session Mgr")
             alarms = CloudwatchAlarm("6 CloudWatch Alarms\n- Task count\n- ECS CPU > 90%\n- RDS CPU > 80%\n- ALB unhealthy\n- WAF blocked > 100")
+            ecr = ECR("ECR Repo\n(drupal:latest)\nScan on push")
 
-    s3_logs = S3("S3 Bucket\n(ALB logs)")
-    autoscaling = ECS("Auto Scaling\nCPU: 70% target\nMem: 80% target\nOut: 60s, In: 300s")
+        s3_logs = S3("S3 Bucket\n(ALB logs)")
+        autoscaling = ECS("Auto Scaling\nCPU: 70% target\nMem: 80% target\nOut: 60s, In: 300s")
 
-    # Internet traffic flow
-    users >> Edge(label="HTTP") >> internet >> igw
+    # Internet traffic flow (TOP to BOTTOM)
+    users >> Edge(label="HTTP") >> igw
     igw >> Edge(label="0.0.0.0/0") >> pub_rt
     pub_rt >> alb_sg >> alb
     alb >> Edge(label="WAFv2 Web ACL") >> waf
 
-    # ALB health check
+    # ALB health check and traffic to ECS (both AZs)
     alb >> Edge(label="Health: GET / every 30s\n(200-399, 2 healthy, 3 unhealthy)") >> ecs_sg
-
-    # ALB to ECS traffic
     alb >> Edge(label="Forward to port 80") >> ecs_sg
-    ecs_sg >> ecs_service
+    ecs_sg >> ecs_az1
+    ecs_sg >> ecs_az2
 
-    # Outbound internet access via NAT
-    ecs_service >> Edge(label="Outbound traffic\n(pkg updates)") >> priv_rt_az1
+    # Outbound internet access via NAT (AZ1)
+    ecs_az1 >> Edge(label="Outbound\n(pkg updates)") >> priv_rt_az1
     priv_rt_az1 >> Edge(label="0.0.0.0/0") >> nat_az1
     nat_az1 >> Edge(label="SNAT") >> igw
 
-    # ECR image pulls
-    ecs_service >> Edge(label="Pull image\n(IAM auth)") >> ecr
+    # Outbound internet access via NAT (AZ2)
+    ecs_az2 >> Edge(label="Outbound\n(pkg updates)") >> priv_rt_az2
+    priv_rt_az2 >> Edge(label="0.0.0.0/0") >> nat_az2
+    nat_az2 >> Edge(label="SNAT") >> igw
 
-    # Database connections
-    ecs_service >> Edge(label="TCP 3306\n(MySQL)") >> rds_sg
-    rds_sg >> rds
-    ecs_service >> Edge(label="TCP 6379\n(Redis, TLS)") >> redis_sg
-    redis_sg >> redis
+    # ECR image pulls
+    ecs_az1 >> Edge(label="Pull image\n(IAM auth)") >> ecr
+    ecs_az2 >> Edge(label="Pull image\n(IAM auth)") >> ecr
+
+    # Database connections (AZ1)
+    ecs_az1 >> Edge(label="TCP 3306") >> rds_sg
+    rds_sg >> rds_az1
+    ecs_az1 >> Edge(label="TCP 6379\n(TLS)") >> redis_sg
+    redis_sg >> redis_az1
+
+    # Database connections (AZ2)
+    ecs_az2 >> Edge(label="TCP 3306") >> rds_sg
+    rds_sg >> rds_az2
+    ecs_az2 >> Edge(label="TCP 6379\n(TLS)") >> redis_sg
+    redis_sg >> redis_az2
+
+    # RDS Multi-AZ replication
+    rds_az1 >> Edge(label="Synchronous\nreplication") >> rds_az2
+
+    # Redis replication
+    redis_az1 >> Edge(label="Asynchronous\nreplication") >> redis_az2
 
     # Secrets retrieval
-    ecs_service >> Edge(label="Retrieve at launch") >> secrets
+    ecs_az1 >> Edge(label="Retrieve at launch") >> secrets
+    ecs_az2 >> Edge(label="Retrieve at launch") >> secrets
 
     # Logging
-    ecs_service >> Edge(label="Container logs\n(awslogs driver)") >> logs
+    ecs_az1 >> Edge(label="Container logs\n(awslogs driver)") >> logs
+    ecs_az2 >> Edge(label="Container logs\n(awslogs driver)") >> logs
     alb >> Edge(label="Access logs") >> s3_logs
     waf >> Edge(label="WAF logs\n(keep allowed, drop blocked)") >> logs
 
     # Monitoring
-    ecs_service >> Edge(label="Metrics") >> alarms
+    ecs_az1 >> Edge(label="Metrics") >> alarms
+    ecs_az2 >> Edge(label="Metrics") >> alarms
     alb >> Edge(label="Metrics") >> alarms
-    rds >> Edge(label="Metrics") >> alarms
-    redis >> Edge(label="Metrics") >> alarms
+    rds_az1 >> Edge(label="Metrics") >> alarms
+    rds_az2 >> Edge(label="Metrics") >> alarms
+    redis_az1 >> Edge(label="Metrics") >> alarms
+    redis_az2 >> Edge(label="Metrics") >> alarms
 
     # Auto scaling
     alarms >> Edge(label="Triggers (CPU/Memory)") >> autoscaling
-    autoscaling >> ecs_service
+    autoscaling >> ecs_az1
+    autoscaling >> ecs_az2
 
     # IAM usage
-    ecs_service >> Edge(label="Task role") >> iam_role
+    ecs_az1 >> Edge(label="Task role") >> iam_role
+    ecs_az2 >> Edge(label="Task role") >> iam_role
     ecr >> iam_role
 
 

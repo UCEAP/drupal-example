@@ -178,24 +178,6 @@ terraform destroy
 
 **Warning**: This will permanently delete all resources including databases. Make sure you have backups!
 
-## Differences from Azure Configuration
-
-| Azure | AWS Equivalent |
-|-------|----------------|
-| Azure Web App | ECS Fargate |
-| Azure MySQL Flexible Server | RDS MySQL |
-| Azure Redis Cache | ElastiCache Redis |
-| App Service Plan | ECS Cluster + Task Definition |
-| Resource Group | N/A (implicit in AWS) |
-| Publish Profile | ECS Task Definition + Service |
-
-Key differences:
-- AWS requires explicit VPC and networking configuration
-- AWS uses IAM roles instead of managed identities
-- ECS requires task definitions with detailed container specs
-- ALB is separate from ECS (unlike Azure Web App's built-in endpoint)
-- Environment variables are set in task definition, not app service config
-
 ## Troubleshooting
 
 ### ECS Tasks Not Starting
