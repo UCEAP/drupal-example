@@ -16,6 +16,6 @@ echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://
 sudo apt update
 sudo apt-get install -y terraform
 
-# Install Azure CLI
+# Install AWS CLI
 # TODO move this into base image
-sudo apt-get install -y azure-cli
+sudo apt-get install -y awscli
