@@ -1,6 +1,7 @@
 # S3 Bucket for ALB Access Logs
 resource "aws_s3_bucket" "alb_logs" {
   bucket_prefix = "${var.name_prefix}-alb-logs-"
+  force_destroy = true
 
   tags = {
     Name = "${var.name_prefix}-alb-logs-bucket"
