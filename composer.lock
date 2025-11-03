@@ -2461,7 +2461,7 @@
         },
         {
             "name": "pantheon-systems/drupal-integrations",
-            "version": "11.1.0",
+            "version": "11.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/pantheon-systems/drupal-integrations.git",
@@ -2502,7 +2502,7 @@
             "description": "Add this project to any Drupal distribution based on drupal/core-composer-scaffold to enable it for use on Pantheon.",
             "support": {
                 "issues": "https://github.com/pantheon-systems/drupal-integrations/issues",
-                "source": "https://github.com/pantheon-systems/drupal-integrations/tree/11.1.0"
+                "source": "https://github.com/pantheon-systems/drupal-integrations/tree/11.2.0"
             },
             "time": "2025-02-04T19:30:04+00:00"
         },
